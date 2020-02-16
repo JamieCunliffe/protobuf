@@ -36,6 +36,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <sstream>
 #include <utility>
 #include <vector>
 
@@ -2036,6 +2037,13 @@ void Generator::GenerateClass(const GeneratorOptions& options,
       }
     }
   }
+
+  printer->Print("$class$.prototype.getMessageDescriptor = function() {\n"
+                 "  return $prefix$.fileDescriptorProto.array[3].find(x => x[0] == '$msg$');\n"
+                 "};\n",
+                 "class", GetMessagePath(options, desc),
+                 "prefix", GetNamespace(options, desc->file()),
+                 "msg", desc->name());
 }
 
 void Generator::GenerateClassConstructor(const GeneratorOptions& options,
@@ -2998,6 +3006,26 @@ void Generator::GenerateRepeatedMessageHelperMethods(
       "ctor", GetMessagePath(options, field->message_type()));
 }
 
+void Generator::GenerateFileDescriptorProto(const GeneratorOptions &options,
+                                            io::Printer* printer,
+                                            const FileDescriptor* file) const {
+  FileDescriptorProto file_proto;
+  file->CopyTo(&file_proto);
+  std::string file_data;
+  file_proto.SerializeToString(&file_data);
+  std::stringstream ss;
+
+  for (unsigned char c : file_data) {
+    ss << "0x" << std::hex << (unsigned int)c << ",";
+  }
+
+  printer->Print(
+    "goog.exportSymbol('$prefix$.fileDescriptorProto', null, global);\n"
+    "$prefix$.fileDescriptorProto = google_protobuf_descriptor_pb.FileDescriptorProto.deserializeBinary([$data$]);\n\n\n",
+    "prefix", GetNamespace(options, file),
+    "data", ss.str());
+}
+
 void Generator::GenerateClassExtensionFieldInfo(const GeneratorOptions& options,
                                                 io::Printer* printer,
                                                 const Descriptor* desc) const {
@@ -3694,6 +3722,9 @@ void Generator::GenerateFile(const GeneratorOptions& options,
        it != extensions.end(); ++it) {
     GenerateExtension(options, printer, *it);
   }
+
+  // Generate the file descriptor proto
+  GenerateFileDescriptorProto(options, printer, file);
 
   // if provided is empty, do not export anything
   if (options.import_style == GeneratorOptions::kImportCommonJs &&
