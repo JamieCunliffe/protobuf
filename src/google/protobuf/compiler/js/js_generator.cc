@@ -2037,13 +2037,7 @@ void Generator::GenerateClass(const GeneratorOptions& options,
       }
     }
   }
-
-  printer->Print("$class$.prototype.getMessageDescriptor = function() {\n"
-                 "  return $prefix$.fileDescriptorProto.array[3].find(x => x[0] == '$msg$');\n"
-                 "};\n",
-                 "class", GetMessagePath(options, desc),
-                 "prefix", GetNamespace(options, desc->file()),
-                 "msg", desc->name());
+  GenerateMessageOptions(options, printer, desc);
 }
 
 void Generator::GenerateClassConstructor(const GeneratorOptions& options,
@@ -3006,11 +3000,12 @@ void Generator::GenerateRepeatedMessageHelperMethods(
       "ctor", GetMessagePath(options, field->message_type()));
 }
 
-void Generator::GenerateFileDescriptorProto(const GeneratorOptions &options,
+void Generator::GenerateMessageOptions(const GeneratorOptions &options,
                                             io::Printer* printer,
-                                            const FileDescriptor* file) const {
-  FileDescriptorProto file_proto;
-  file->CopyTo(&file_proto);
+                                            const Descriptor* descriptor) const {
+
+  DescriptorProto file_proto;
+  descriptor->CopyTo(&file_proto);
   std::string file_data;
   file_proto.SerializeToString(&file_data);
   std::stringstream ss;
@@ -3019,11 +3014,11 @@ void Generator::GenerateFileDescriptorProto(const GeneratorOptions &options,
     ss << "0x" << std::hex << (unsigned int)c << ",";
   }
 
-  printer->Print(
-    "goog.exportSymbol('$prefix$.fileDescriptorProto', null, global);\n"
-    "$prefix$.fileDescriptorProto = google_protobuf_descriptor_pb.FileDescriptorProto.deserializeBinary([$data$]);\n\n\n",
-    "prefix", GetNamespace(options, file),
-    "data", ss.str());
+  printer->Print("$class$.prototype.getMessageDescriptor = function() {\n"
+                 "return [$data$];\n"
+                 "}\n",
+                 "class",
+                 GetMessagePath(options, descriptor), "data", ss.str());
 }
 
 void Generator::GenerateClassExtensionFieldInfo(const GeneratorOptions& options,
@@ -3724,7 +3719,7 @@ void Generator::GenerateFile(const GeneratorOptions& options,
   }
 
   // Generate the file descriptor proto
-  GenerateFileDescriptorProto(options, printer, file);
+  // GenerateFileDescriptorProto(options, printer, file);
 
   // if provided is empty, do not export anything
   if (options.import_style == GeneratorOptions::kImportCommonJs &&

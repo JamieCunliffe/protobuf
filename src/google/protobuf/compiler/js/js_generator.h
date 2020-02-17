@@ -324,9 +324,9 @@ class PROTOC_EXPORT Generator : public CodeGenerator {
                                             const FieldDescriptor* field) const;
 
   // Generate the file descriptor data
-  void GenerateFileDescriptorProto(const GeneratorOptions &options,
+  void GenerateMessageOptions(const GeneratorOptions &options,
                                    io::Printer* printer,
-                                   const FileDescriptor* file) const;
+                                   const Descriptor* descriptor) const;
 
   GOOGLE_DISALLOW_EVIL_CONSTRUCTORS(Generator);
 };
