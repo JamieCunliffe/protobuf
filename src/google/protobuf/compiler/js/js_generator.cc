@@ -3015,7 +3015,7 @@ void Generator::GenerateMessageOptions(const GeneratorOptions &options,
   }
 
   printer->Print("$class$.prototype.getMessageDescriptor = function() {\n"
-                 "return [$data$];\n"
+                 "return google_protobuf_descriptor_pb.DescriptorProto.deserializeBinary([$data$]);\n"
                  "}\n",
                  "class",
                  GetMessagePath(options, descriptor), "data", ss.str());
