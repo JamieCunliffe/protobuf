@@ -3019,6 +3019,13 @@ void Generator::GenerateMessageOptions(const GeneratorOptions &options,
                  "}\n",
                  "class",
                  GetMessagePath(options, descriptor), "data", ss.str());
+
+  printer->Print("$class$.prototype.getMessageDescriptorBytes = function() {\n"
+                 "return [$data$];\n"
+                 "}\n",
+                 "class",
+                 GetMessagePath(options, descriptor), "data", ss.str());
+
 }
 
 void Generator::GenerateClassExtensionFieldInfo(const GeneratorOptions& options,
